@@ -15,33 +15,37 @@ import configparser
 """
 
 
-class MyConfiguration():
+class MyConfiguration:
     def __init__(self, config_file=None):
         super(MyConfiguration, self).__init__()
 
         # ./ current directory
         if config_file is None:
-            config_file = r'./configs/config.cfg'
+            config_file = r"./configs/config.cfg"
 
         config = ConfigParser()
         # interpolation method
         config._interpolation = configparser.ExtendedInterpolation()
         config.read(filenames=config_file)
-
         self.config = config
         self.config_path = config_file
-        self.add_section = 'Additional'
+        self.add_section = "Additional"
         print("Loaded config file successfully ...")
-        config.write(open(config_file, 'w'))
+        config.write(open(config_file, "w"))
+        self.config.write(open(config_file, "w"))
 
     def add_args(self, key, value):
         self.config.set(self.add_section, key, value)
-        self.config.write(open(self.config_path, 'w'))
+        self.config.write(open(self.config_path, "w"))
 
     def write_to_file(self, config_file_path):
-        self.config.write(open(config_file_path, 'w'))
+        self.config.write(open(config_file_path, "w"))
 
     # string int float boolean
+    @property
+    def use_mix(self):
+        return self.config.getboolean("General", "use_mix")
+
     @property
     def test_dir(self):
         return self.config.get("Directory", "test_dir")
@@ -223,8 +227,7 @@ class MyConfiguration():
         return self.config.getint("Train", "epochs")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = MyConfiguration("config.cfg")
-    config.config.set("Directory", "root_dir",
-                      r"D:\test")
+    config.config.set("Directory", "root_dir", r"D:\test")
     print(config.root_dir)

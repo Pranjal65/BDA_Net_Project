@@ -8,18 +8,20 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 
-'''for 3 + 3 bands input data(pre+post)'''
+"""for 3 + 3 bands input data(pre+post)"""
 rgb_mean = (0.485, 0.456, 0.406, 0.485, 0.456, 0.406)
 rgb_std = (0.229, 0.224, 0.225, 0.229, 0.224, 0.225)
 
+
 class MyDataset(Dataset):
-    def __init__(self,
-                 config,
-                 args,
-                 subset,
-                 file_length=None):
+    def __init__(self, config, args, subset, file_length=None):
         super(MyDataset, self).__init__()
-        assert subset == 'train' or subset == 'val' or subset == 'test' or subset == 'train_unsup'
+        assert (
+            subset == "train"
+            or subset == "val"
+            or subset == "test"
+            or subset == "train_unsup"
+        )
 
         self.args = args
         self.config = config
@@ -36,38 +38,50 @@ class MyDataset(Dataset):
                 (255, 125, 0): 3,
                 (255, 0, 0): 4,
             }
-            self.class_names = ['Background', 'Intact', 'Minor', 'Major', 'Destroyed']
+            self.class_names = ["Background", "Intact", "Minor", "Major", "Destroyed"]
 
         # pre image
         self.data_list_pre = []
-        with open(os.path.join(self.root, subset + '_image_pre.txt'), 'r') as f:
+        with open(
+            os.path.join(self.root, "examples", subset + "_image_pre.txt"), "r"
+        ) as f:
             for line in f:
-                if line.strip('\n') != '':
-                    self.data_list_pre.append(line.strip('\n'))
+                if line.strip("\n") != "":
+                    self.data_list_pre.append(line.strip("\n"))
 
         # post image
         self.data_list_post = []
-        with open(os.path.join(self.root, subset + '_image_post.txt'), 'r') as f:
+        with open(
+            os.path.join(self.root, "examples", subset + "_image_post.txt"), "r"
+        ) as f:
             for line in f:
-                if line.strip('\n') != '':
-                    self.data_list_post.append(line.strip('\n'))
+                if line.strip("\n") != "":
+                    self.data_list_post.append(line.strip("\n"))
 
-        if subset != 'train_unsup':
+        if subset != "train_unsup":
             # label
-            if os.path.exists(os.path.join(self.root, subset + '_label.txt')):
+            if os.path.exists(
+                os.path.join(self.root, "examples", subset + "_label.txt")
+            ):
                 self.target_list = []
-                with open(os.path.join(self.root, subset + '_label.txt'), 'r') as f:
+                with open(
+                    os.path.join(self.root, "examples", subset + "_label.txt"), "r"
+                ) as f:
                     for line in f:
-                        if line.strip('\n') != '':
-                            self.target_list.append(line.strip('\n'))
+                        if line.strip("\n") != "":
+                            self.target_list.append(line.strip("\n"))
             assert len(self.data_list_pre) == len(self.data_list_post)
 
             if self._file_length is not None:
-                self.data_list_pre, self.data_list_post, self.target_list = self._construct_new_file_list(self._file_length, is_UnsupData=False)
+                self.data_list_pre, self.data_list_post, self.target_list = (
+                    self._construct_new_file_list(self._file_length, is_UnsupData=False)
+                )
         else:
             if self._file_length is not None:
-                self.data_list_pre, self.data_list_post,= self._construct_new_file_list(self._file_length, is_UnsupData=True)
-
+                (
+                    self.data_list_pre,
+                    self.data_list_post,
+                ) = self._construct_new_file_list(self._file_length, is_UnsupData=True)
 
     def _construct_new_file_list(self, length, is_UnsupData):
         """
@@ -78,16 +92,19 @@ class MyDataset(Dataset):
 
         if length < files_len:
             if not is_UnsupData:
-                return self.data_list_pre[:length], self.data_list_post[:length], self.target_list[:length]
+                return (
+                    self.data_list_pre[:length],
+                    self.data_list_post[:length],
+                    self.target_list[:length],
+                )
             else:
                 return self.data_list_pre[:length], self.data_list_post[:length]
 
         new_data_pre_list = self.data_list_pre * (length // files_len)
-        new_data_post_list= self.data_list_post * (length // files_len)
-
+        new_data_post_list = self.data_list_post * (length // files_len)
 
         rand_indices = torch.randperm(files_len).tolist()
-        new_indices = rand_indices[:length % files_len]
+        new_indices = rand_indices[: length % files_len]
 
         new_data_pre_list += [self.data_list_pre[i] for i in new_indices]
         new_data_post_list += [self.data_list_post[i] for i in new_indices]
@@ -98,7 +115,6 @@ class MyDataset(Dataset):
             return new_data_pre_list, new_data_post_list, new_target_list
         else:
             return new_data_pre_list, new_data_post_list
-
 
     def mask_to_class(self, mask):
         """
@@ -123,8 +139,9 @@ class MyDataset(Dataset):
                 A.VerticalFlip(p=0.8),
                 A.RandomRotate90(p=0.8),
                 A.Transpose(p=0.8),
-                A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.2, rotate_limit=45, p=0.5),
-
+                A.ShiftScaleRotate(
+                    shift_limit=0.0625, scale_limit=0.2, rotate_limit=45, p=0.5
+                ),
                 A.Normalize(mean=rgb_mean, std=rgb_std),
                 ToTensorV2(),
             ]
@@ -143,10 +160,13 @@ class MyDataset(Dataset):
         """
         untrain_transform = A.Compose(
             [
-                A.Resize(self.config.eval_size, self.config.eval_size, interpolation=cv2.INTER_NEAREST),
+                A.Resize(
+                    self.config.eval_size,
+                    self.config.eval_size,
+                    interpolation=cv2.INTER_NEAREST,
+                ),
                 A.Normalize(mean=rgb_mean, std=rgb_std),
                 ToTensorV2(),
-
             ]
         )
         transformed = untrain_transform(image=image, mask=mask)
@@ -174,30 +194,32 @@ class MyDataset(Dataset):
         return image
 
     def __getitem__(self, index):
+        print(self.data_list_pre[index])
+
         image_pre = cv2.imread(self.data_list_pre[index])
         image_pre = cv2.cvtColor(image_pre, cv2.COLOR_BGR2RGB)
-
+        print(self.data_list_post[index])
         image_post = cv2.imread(self.data_list_post[index])
         image_post = cv2.cvtColor(image_post, cv2.COLOR_BGR2RGB)
 
         image = np.append(image_pre, image_post, axis=2).astype(np.uint8)
 
-        if not self.args.only_prediction and self.subset != 'train_unsup':
+        if not self.args.only_prediction and self.subset != "train_unsup":
             mask = np.array(Image.open(self.target_list[index])).astype(np.uint8)
 
-        if self.subset == 'train':
+        if self.subset == "train":
             if not self.args.is_test:
                 t_datas, t_targets = self.train_transforms(image, mask)
             else:
                 t_datas, t_targets = self.untrain_transforms(image, mask)
             return t_datas, t_targets, self.data_list_post[index]
-        elif self.subset =='train_unsup':
+        elif self.subset == "train_unsup":
             t_datas = self.untrain_transforms1(image)
             return t_datas, self.data_list_post[index], index
-        elif self.subset == 'val':
+        elif self.subset == "val":
             t_datas, t_targets = self.untrain_transforms(image, mask)
             return t_datas, t_targets, self.data_list_post[index]
-        elif self.subset == 'test':
+        elif self.subset == "test":
             if not self.args.only_prediction:
                 t_datas, t_targets = self.untrain_transforms(image, mask)
                 return t_datas, t_targets, self.data_list_post[index]
