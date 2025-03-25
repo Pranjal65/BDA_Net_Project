@@ -1,3 +1,3 @@
-/home/pranjalmore/Pranjal/ClgProject/MS4D-Net-Building-Damage-Assessment/dataset/trian_image_post_001.tif
-/home/pranjalmore/Pranjal/ClgProject/MS4D-Net-Building-Damage-Assessment/dataset/trian_image_post_001.tif
-/home/pranjalmore/Pranjal/ClgProject/MS4D-Net-Building-Damage-Assessment/dataset/trian_image_post_001.tif
+/content/drive/MyDrive/Final_Year_Project/dataset/trian_image_post_001.tif
+/content/drive/MyDrive/Final_Year_Project/dataset/trian_image_post_001.tif
+/content/drive/MyDrive/Final_Year_Project/dataset/trian_image_post_001.tif

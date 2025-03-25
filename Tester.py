@@ -8,6 +8,9 @@ from utils.util import AverageMeter, ensure_dir, object_based_infer
 import shutil
 from utils.metrics import Evaluator_tensor
 from PIL import Image
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
 class Tester(object):
     def __init__(self,
@@ -88,6 +91,31 @@ class Tester(object):
 
         self.evaluator = Evaluator_tensor(self.config.nb_classes, self.device)
         self.evaluator_BD = Evaluator_tensor(2, self.device)
+       
+
+       
+    def plot_confusion_matrix(self):
+    # Get confusion matrix from evaluator
+       cm = self.evaluator.confusion_matrix.cpu().numpy()
+       print("conffffff")
+    # Normalize the confusion matrix (optional)
+       cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    # Define class labels
+       class_labels = ['Background', 'Intact', 'Minor', 'Major', 'Destroyed']  # Update based on your classes
+
+    # Plot the heatmap
+       plt.figure(figsize=(8, 6))
+       sns.heatmap(cm_normalized, annot=True, fmt=".2f", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
+
+       plt.xlabel("Predicted Labels")
+       plt.ylabel("True Labels")
+       plt.title("Confusion Matrix Heatmap")
+    
+    # Save the heatmap
+       plt.savefig(f"{self.test_log_path}/confusion_matrix.png", dpi=300)
+       plt.show()
+      #  plt.close()
 
     def eval_and_predict_damage_PSMT(self):
         """
@@ -303,6 +331,8 @@ class Tester(object):
         output_iou = {}
         output_iou['miou_damage'] = miou
         output_iou['iou_building'] = iou0[1]
+        print("heatmap.......................................................")
+        self.plot_confusion_matrix()
         return output_iou
 
     def eval_and_predict_damage_PSMT_object(self):
@@ -310,6 +340,7 @@ class Tester(object):
         object-based evaluation
         :return:
         """
+        print("TEsting.........................")
         self._resume_ckpt_PSMT()
         self.evaluator.reset()
         self.evaluator_BD.reset()
@@ -560,7 +591,7 @@ class Tester(object):
 
     def _resume_ckpt_PSMT(self):
         print("     + Loading ckpt path : {} ...".format(self.resume_ckpt_path))
-        checkpoint = torch.load(self.resume_ckpt_path)
+        checkpoint = torch.load(self.resume_ckpt_path,weights_only=False)
         self.model[0].load_state_dict(checkpoint['state_dict1'], strict=True)
         self.model[1].load_state_dict(checkpoint['state_dict2'], strict=True)
         print("     + Model State Loaded ! :D ")
